@@ -53,7 +53,7 @@ const PlaceOrder = () => {
     event.preventDefault();
 
     const totalAmount = (getCartAmount() + delivery_fee).toFixed(2);
-    const upiLink = `upi://pay?pa=yourupiid@okaxis&pn=Your%20Bakery&am=${totalAmount}&cu=INR&tn=Order%20Payment`;
+    const upiLink = `upi://pay?pa=noushahmed19@okicici&pn=Noushis%20Cakes&am=${totalAmount}&cu=INR&tn=Order%20Payment`;
 
     if (method === 'googlepay') {
       window.open(upiLink, '_blank');
