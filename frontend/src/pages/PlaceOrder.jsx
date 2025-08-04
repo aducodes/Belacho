@@ -52,8 +52,11 @@ const PlaceOrder = () => {
   const onSubmitHandler = async (event) => {
     event.preventDefault();
 
-    const totalAmount = (getCartAmount() + delivery_fee).toFixed(2);
-    const upiLink = `upi://pay?pa=noushahmed19@okicici&pn=Noushis%20Cakes&am=${totalAmount}&cu=INR&tn=Order%20Payment`;
+    const cartAmount = getCartAmount();
+    const discountAmount = (cartAmount * discount) / 100;
+    const finalAmount = (cartAmount - discountAmount + delivery_fee).toFixed(2);
+
+    const upiLink = `upi://pay?pa=noushahmed19@okicici&pn=Noushis%20Cakes&am=${finalAmount}&cu=INR&tn=Order%20Payment`;
 
     if (method === 'googlepay') {
       window.open(upiLink, '_blank');
@@ -80,7 +83,7 @@ const PlaceOrder = () => {
       const orderData = {
         address: formData,
         items: orderItems,
-        amount: parseFloat(totalAmount),
+        amount: parseFloat(finalAmount),
         paymentInfo: {
           method: method,
           status: method === 'googlepay' ? 'pending_confirmation' : 'unpaid'
