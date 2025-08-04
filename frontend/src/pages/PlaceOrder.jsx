@@ -15,6 +15,7 @@ const PlaceOrder = () => {
   const [method, setMethod] = useState('googlepay');
   const [couponInput, setCouponInput] = useState('');
   const [invalidCoupon, setInvalidCoupon] = useState(false);
+  const [localDiscount, setLocalDiscount] = useState(0); // Local discount tracking
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -35,7 +36,6 @@ const PlaceOrder = () => {
     delivery_fee,
     products,
     applyCoupon,
-    discount,
     coupon
   } = useContext(ShopContext);
 
@@ -46,7 +46,13 @@ const PlaceOrder = () => {
 
   const handleApplyCoupon = () => {
     const result = applyCoupon(couponInput);
-    setInvalidCoupon(!result.success);
+    if (result.success) {
+      setInvalidCoupon(false);
+      setLocalDiscount(result.discount || 10); // Example: 10% if not returned
+    } else {
+      setInvalidCoupon(true);
+      setLocalDiscount(0);
+    }
   };
 
   const onSubmitHandler = async (event) => {
@@ -61,9 +67,8 @@ const PlaceOrder = () => {
       return;
     }
 
-    // Recalculate the amount safely
     const cartAmount = getCartAmount();
-    const discountAmount = (cartAmount * (discount || 0)) / 100;
+    const discountAmount = (cartAmount * localDiscount) / 100;
     const finalAmount = (cartAmount - discountAmount + delivery_fee).toFixed(2);
 
     const upiLink = `upi://pay?pa=noushahmed19@okicici&pn=Noushis%20Cakes&am=${finalAmount}&cu=INR&tn=Order%20Payment`;
@@ -151,10 +156,7 @@ const PlaceOrder = () => {
           <input readOnly value="Kerala" className='border border-gray-300 rounded py-1.5 px-3.5 w-full bg-gray-100 cursor-not-allowed text-gray-500' />
         </div>
 
-        <div className='flex gap-3'>
-          <input required onChange={onChangeHandler} name='pincode' value={formData.pincode} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' type="number" placeholder='Pincode' />
-        </div>
-
+        <input required onChange={onChangeHandler} name='pincode' value={formData.pincode} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' type="number" placeholder='Pincode' />
         <input required onChange={onChangeHandler} name='phone' value={formData.phone} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' type="number" placeholder='Phone' />
       </div>
 
@@ -167,7 +169,7 @@ const PlaceOrder = () => {
 
         {/* Coupon Section */}
         <div className='mt-6'>
-          {discount === 0 ? (
+          {localDiscount === 0 ? (
             <div className='flex flex-col gap-2'>
               <input
                 type='text'
