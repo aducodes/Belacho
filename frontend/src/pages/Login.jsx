@@ -5,14 +5,13 @@ import { toast } from 'react-toastify';
 
 const Login = () => {
   const [currentState, setCurrentState] = useState('Login');
-  const { token, setToken, navigate, backendUrl } = useContext(ShopContext);
+  const { token, setToken, setUser, navigate, backendUrl } = useContext(ShopContext);
 
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // 🔓 Decode JWT
   const decodeToken = (token) => {
     try {
       const base64Url = token.split('.')[1];
@@ -42,11 +41,12 @@ const Login = () => {
 
         const userData = decodeToken(token);
         if (userData) {
+          localStorage.setItem('user', JSON.stringify(userData));
+          setUser(userData);
           toast.success(`Welcome ${userData.name || "back"}!`);
         } else {
           toast.success('Login successful!');
         }
-
       } else {
         toast.error(response.data.message);
       }

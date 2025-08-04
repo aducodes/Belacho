@@ -9,19 +9,17 @@ const ShopContextProvider = (props) => {
   const currency = "₹";
   const delivery_fee = 10;
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
-
   const navigate = useNavigate();
 
+  const [products, setProducts] = useState([]);
+  const [cartItems, setCartItems] = useState({});
   const [search, setSearch] = useState("");
   const [showSearch, setShowSearch] = useState(false);
-  const [cartItems, setCartItems] = useState({});
-  const [products, setProducts] = useState([]);
   const [token, setToken] = useState("");
   const [user, setUser] = useState(null);
   const [coupon, setCoupon] = useState("");
   const [discount, setDiscount] = useState(0);
 
-  // 🔐 Decode JWT to get user info
   const decodeToken = (token) => {
     try {
       const base64Url = token.split('.')[1];
@@ -33,9 +31,9 @@ const ShopContextProvider = (props) => {
   };
 
   const applyCoupon = (code) => {
-    const trimmedCode = code.trim().toUpperCase();
-    if (trimmedCode === "BELACHO10") {
-      setCoupon(trimmedCode);
+    const trimmed = code.trim().toUpperCase();
+    if (trimmed === "BELACHO10") {
+      setCoupon(trimmed);
       setDiscount(0.10);
       toast.success("Coupon applied successfully!");
       return { success: true };
@@ -47,9 +45,7 @@ const ShopContextProvider = (props) => {
     }
   };
 
-  const getDiscountAmount = () => {
-    return getCartAmount() * discount;
-  };
+  const getDiscountAmount = () => getCartAmount() * discount;
 
   const addToCart = async (itemId, size) => {
     if (!size) {
@@ -57,89 +53,61 @@ const ShopContextProvider = (props) => {
       return;
     }
 
-    const cartData = structuredClone(cartItems);
-    if (!cartData[itemId]) cartData[itemId] = {};
-    cartData[itemId][size] = (cartData[itemId][size] || 0) + 1;
-
-    setCartItems(cartData);
+    const newCart = structuredClone(cartItems);
+    if (!newCart[itemId]) newCart[itemId] = {};
+    newCart[itemId][size] = (newCart[itemId][size] || 0) + 1;
+    setCartItems(newCart);
 
     if (token) {
       try {
-        await axios.post(
-          `${backendUrl}/api/cart/add`,
-          { itemId, size },
-          { headers: { token } }
-        );
-      } catch (error) {
-        console.log("Add to cart error:", error);
-        toast.error("Failed to sync cart with server");
+        await axios.post(`${backendUrl}/api/cart/add`, { itemId, size }, { headers: { token } });
+      } catch (err) {
+        console.log(err);
+        toast.error("Failed to sync cart");
       }
     }
   };
 
   const updateQuantity = async (itemId, size, quantity) => {
-    const cartData = structuredClone(cartItems);
-    if (cartData[itemId]) {
-      cartData[itemId][size] = quantity;
-      setCartItems(cartData);
+    const updatedCart = structuredClone(cartItems);
+    if (updatedCart[itemId]) {
+      updatedCart[itemId][size] = quantity;
+      setCartItems(updatedCart);
 
       if (token) {
         try {
-          await axios.post(
-            `${backendUrl}/api/cart/update`,
-            { itemId, size, quantity },
-            { headers: { token } }
-          );
-        } catch (error) {
-          console.log(error);
-          toast.error(error.message);
+          await axios.post(`${backendUrl}/api/cart/update`, { itemId, size, quantity }, { headers: { token } });
+        } catch (err) {
+          console.log(err);
+          toast.error("Update failed");
         }
       }
     }
   };
 
   const getCartCount = () => {
-    let totalCount = 0;
-    for (const itemId in cartItems) {
-      for (const size in cartItems[itemId]) {
-        totalCount += cartItems[itemId][size];
+    let count = 0;
+    for (let item in cartItems) {
+      for (let size in cartItems[item]) {
+        count += cartItems[item][size];
       }
     }
-    return totalCount;
+    return count;
   };
 
   const getCartAmount = () => {
-    let totalAmount = 0;
-    for (const itemId in cartItems) {
-      const product = products.find((p) => p._id === itemId);
+    let amount = 0;
+    for (let item in cartItems) {
+      const product = products.find((p) => p._id === item);
       if (!product) continue;
-
-      for (const size in cartItems[itemId]) {
-        const qty = cartItems[itemId][size];
-        totalAmount += product.price * qty;
+      for (let size in cartItems[item]) {
+        amount += product.price * cartItems[item][size];
       }
     }
-    return totalAmount;
+    return amount;
   };
 
-  const fetchCartFromBackend = async () => {
-    try {
-      const res = await axios.post(
-        `${backendUrl}/api/cart/get`,
-        {},
-        { headers: { token } }
-      );
-      if (res.data.success) {
-        setCartItems(res.data.cartData);
-      } else {
-        console.warn("Cart fetch failed:", res.data.message);
-      }
-    } catch (error) {
-      console.log("Error fetching cart data:", error);
-    }
-  };
-
-  const getProductsData = async () => {
+  const fetchProducts = async () => {
     try {
       const res = await axios.get(`${backendUrl}/api/product/list`);
       if (res.data.success) {
@@ -147,50 +115,45 @@ const ShopContextProvider = (props) => {
       } else {
         toast.error(res.data.message);
       }
-    } catch (error) {
-      console.log(error);
-      toast.error(error.message);
+    } catch (err) {
+      console.log(err);
+      toast.error("Failed to load products");
     }
   };
 
-  const getUserCart = async (token) => {
+  const fetchUserCart = async () => {
     try {
-      const response = await axios.post(
-        backendUrl + '/api/cart/get',
-        {},
-        { headers: { token } }
-      );
-      if (response.data.success) {
-        setCartItems(response.data.cartData);
+      const res = await axios.post(`${backendUrl}/api/cart/get`, {}, { headers: { token } });
+      if (res.data.success) {
+        setCartItems(res.data.cartData);
       }
-    } catch (error) {
-      console.log(error);
-      toast.error(error.message);
+    } catch (err) {
+      console.log(err);
+      toast.error("Failed to load cart");
     }
   };
 
-  // Initial fetch
   useEffect(() => {
-    getProductsData();
+    fetchProducts();
   }, []);
 
-  // On app load — load token & decode user
   useEffect(() => {
-    const localToken = localStorage.getItem("token");
-    if (localToken) {
-      setToken(localToken);
-      const decodedUser = decodeToken(localToken);
-      if (decodedUser) {
-        setUser(decodedUser);
+    const savedToken = localStorage.getItem("token");
+    const savedUser = localStorage.getItem("user");
+
+    if (savedToken) {
+      setToken(savedToken);
+      const userData = savedUser ? JSON.parse(savedUser) : decodeToken(savedToken);
+      if (userData) {
+        setUser(userData);
+        localStorage.setItem("user", JSON.stringify(userData));
       }
-      getUserCart(localToken);
     }
   }, []);
 
-  // Whenever token changes, fetch cart again
   useEffect(() => {
     if (token) {
-      fetchCartFromBackend();
+      fetchUserCart();
     }
   }, [token]);
 
@@ -206,15 +169,16 @@ const ShopContextProvider = (props) => {
     setShowSearch,
 
     cartItems,
-    addToCart,
     setCartItems,
+    addToCart,
     updateQuantity,
     getCartCount,
     getCartAmount,
 
-    setToken,
     token,
+    setToken,
     user,
+    setUser,
     navigate,
 
     coupon,
