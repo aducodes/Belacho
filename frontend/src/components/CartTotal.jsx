@@ -3,18 +3,21 @@ import React, { useContext } from 'react';
 import { ShopContext } from '../context/ShopContext';
 import Title from './Title';
 
-const CartTotal = () => {
+const CartTotal = ({
+  overrideDiscount = null,
+  overrideCoupon = null,
+  isCouponApplied = false,
+}) => {
   const {
     currency,
     delivery_fee = 0,
     getCartAmount,
-    getDiscountAmount,
-    discount = 0,
-    coupon,
   } = useContext(ShopContext);
 
   const subtotal = getCartAmount?.() || 0;
-  const discountAmount = getDiscountAmount?.() || 0;
+
+  const discount = isCouponApplied && overrideDiscount ? overrideDiscount : 0;
+  const discountAmount = (subtotal * discount) / 100;
   const totalAfterDiscount = subtotal - discountAmount;
   const total = subtotal === 0 ? 0 : totalAfterDiscount + delivery_fee;
 
@@ -30,7 +33,7 @@ const CartTotal = () => {
           <p>{currency} {subtotal.toFixed(2)}</p>
         </div>
 
-        {discount > 0 && (
+        {isCouponApplied && discountAmount > 0 && (
           <div className='flex justify-between text-green-700'>
             <p>Coupon Discount</p>
             <p>-{currency} {discountAmount.toFixed(2)}</p>

@@ -37,22 +37,22 @@ const PlaceOrder = () => {
     products,
     applyCoupon,
     coupon,
+    currency
   } = useContext(ShopContext);
 
-  // 🔒 Redirect if not logged in
   useEffect(() => {
     if (!token) {
       navigate('/login');
     }
   }, [token]);
 
-  const onChangeHandler = (event) => {
-    const { name, value } = event.target;
-    setFormData((data) => ({ ...data, [name]: value }));
+  const onChangeHandler = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleApplyCoupon = () => {
-    const result = applyCoupon(couponInput);
+    const result = applyCoupon(couponInput.trim());
     if (result.success) {
       setInvalidCoupon(false);
       setLocalDiscount(result.discount || 10);
@@ -62,8 +62,8 @@ const PlaceOrder = () => {
     }
   };
 
-  const onSubmitHandler = async (event) => {
-    event.preventDefault();
+  const onSubmitHandler = async (e) => {
+    e.preventDefault();
 
     const hasItems = Object.values(cartItems).some((sizes) =>
       Object.values(sizes).some((quantity) => quantity > 0)
@@ -93,7 +93,7 @@ const PlaceOrder = () => {
         for (const size in cartItems[productId]) {
           const quantity = cartItems[productId][size];
           if (quantity > 0) {
-            const product = products.find((p) => p._id === productId);
+            const product = products.find(p => p._id === productId);
             if (product) {
               orderItems.push({
                 ...structuredClone(product),
@@ -164,7 +164,11 @@ const PlaceOrder = () => {
       {/* Order Summary & Payment */}
       <div className='mt-8 w-full sm:max-w-[400px]'>
         <div className='mt-8 min-w-80'>
-          <CartTotal />
+          <CartTotal
+            overrideDiscount={localDiscount}
+            overrideCoupon={coupon}
+            isCouponApplied={localDiscount > 0}
+          />
         </div>
 
         {/* Coupon Section */}
