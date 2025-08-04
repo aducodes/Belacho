@@ -52,6 +52,16 @@ const PlaceOrder = () => {
   const onSubmitHandler = async (event) => {
     event.preventDefault();
 
+    // Check if cart is empty
+    const hasItems = Object.values(cartItems).some(
+      sizes => Object.values(sizes).some(quantity => quantity > 0)
+    );
+
+    if (!hasItems) {
+      alert("Your cart is empty. Please add items before placing an order.");
+      return;
+    }
+
     const cartAmount = getCartAmount();
     const discountAmount = (cartAmount * discount) / 100;
     const finalAmount = (cartAmount - discountAmount + delivery_fee).toFixed(2);
@@ -112,8 +122,8 @@ const PlaceOrder = () => {
 
   return (
     <form onSubmit={onSubmitHandler} className='flex flex-col sm:flex-row justify-between gap-4 pt-5 sm:pt-14 min-h-[80vh] border-t'>
-      
-      {/* Left Side */}
+
+      {/* Left Side - Delivery Info */}
       <div className='flex flex-col gap-4 w-full sm:max-w-[480px]'>
         <div className='text-xl sm:text-2xl my-3'>
           <Title text1={'DELIVERY'} text2={'INFORMATION'} />
@@ -144,7 +154,7 @@ const PlaceOrder = () => {
         <input required onChange={onChangeHandler} name='phone' value={formData.phone} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' type="number" placeholder='Phone' />
       </div>
 
-      {/* Right Side */}
+      {/* Right Side - Summary & Payment */}
       <div className='mt-8 w-full sm:max-w-[400px]'>
 
         <div className='mt-8 min-w-80'>
