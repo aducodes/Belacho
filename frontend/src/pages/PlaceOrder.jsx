@@ -52,7 +52,6 @@ const PlaceOrder = () => {
   const onSubmitHandler = async (event) => {
     event.preventDefault();
 
-    // Check if cart is empty
     const hasItems = Object.values(cartItems).some(
       sizes => Object.values(sizes).some(quantity => quantity > 0)
     );
@@ -62,8 +61,9 @@ const PlaceOrder = () => {
       return;
     }
 
+    // Recalculate the amount safely
     const cartAmount = getCartAmount();
-    const discountAmount = (cartAmount * discount) / 100;
+    const discountAmount = (cartAmount * (discount || 0)) / 100;
     const finalAmount = (cartAmount - discountAmount + delivery_fee).toFixed(2);
 
     const upiLink = `upi://pay?pa=noushahmed19@okicici&pn=Noushis%20Cakes&am=${finalAmount}&cu=INR&tn=Order%20Payment`;
@@ -75,16 +75,20 @@ const PlaceOrder = () => {
     }
 
     try {
-      let orderItems = [];
+      const orderItems = [];
 
-      for (const items in cartItems) {
-        for (const item in cartItems[items]) {
-          if (cartItems[items][item] > 0) {
-            const itemInfo = structuredClone(products.find(product => product._id === items));
-            if (itemInfo) {
-              itemInfo.size = item;
-              itemInfo.quantity = cartItems[items][item];
-              orderItems.push(itemInfo);
+      for (const productId in cartItems) {
+        for (const size in cartItems[productId]) {
+          const quantity = cartItems[productId][size];
+          if (quantity > 0) {
+            const product = products.find(p => p._id === productId);
+            if (product) {
+              const item = {
+                ...structuredClone(product),
+                size,
+                quantity,
+              };
+              orderItems.push(item);
             }
           }
         }
@@ -95,7 +99,7 @@ const PlaceOrder = () => {
         items: orderItems,
         amount: parseFloat(finalAmount),
         paymentInfo: {
-          method: method,
+          method,
           status: method === 'googlepay' ? 'pending_confirmation' : 'unpaid'
         }
       };
