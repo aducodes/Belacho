@@ -3,7 +3,7 @@ import { ShopContext } from '../context/ShopContext';
 import { useNavigate } from 'react-router-dom';
 import Title from '../components/Title';
 import CartTotal from '../components/CartTotal';
-import QRCode from 'qrcode.react'; 
+import QRCode from 'react-qr-code';
 import { assets } from '../assets/assets/assets';
 
 const keralaDistricts = [
