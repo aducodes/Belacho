@@ -78,7 +78,8 @@ const PlaceOrder = () => {
     const discountAmount = (cartAmount * localDiscount) / 100;
     const finalAmount = (cartAmount - discountAmount + delivery_fee).toFixed(2);
 
-    const upiLink = `upi://pay?pa=noushahmed19@okicici&pn=Noushis%20Cakes&am=${finalAmount}&cu=INR&tn=Order%20Payment`;
+    const upiLink = `upi://pay?pa=noushahmed19@okicici&am=${finalAmount}&cu=INR`;
+
 
     if (method === 'googlepay') {
       window.open(upiLink, '_blank');
