@@ -12,16 +12,26 @@ const ShopContextProvider = (props) => {
 
   const navigate = useNavigate();
 
-  // States
   const [search, setSearch] = useState("");
   const [showSearch, setShowSearch] = useState(false);
   const [cartItems, setCartItems] = useState({});
   const [products, setProducts] = useState([]);
   const [token, setToken] = useState("");
+  const [user, setUser] = useState(null);
   const [coupon, setCoupon] = useState("");
   const [discount, setDiscount] = useState(0);
 
-  // Coupon Logic
+  // 🔐 Decode JWT to get user info
+  const decodeToken = (token) => {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      return JSON.parse(atob(base64));
+    } catch {
+      return null;
+    }
+  };
+
   const applyCoupon = (code) => {
     const trimmedCode = code.trim().toUpperCase();
     if (trimmedCode === "BELACHO10") {
@@ -41,7 +51,6 @@ const ShopContextProvider = (props) => {
     return getCartAmount() * discount;
   };
 
-  // ✅ Add to Cart (updated to also sync with backend)
   const addToCart = async (itemId, size) => {
     if (!size) {
       toast.error("Select Product Size");
@@ -54,7 +63,6 @@ const ShopContextProvider = (props) => {
 
     setCartItems(cartData);
 
-    // ✅ Update backend too
     if (token) {
       try {
         await axios.post(
@@ -69,7 +77,6 @@ const ShopContextProvider = (props) => {
     }
   };
 
-  // ✅ Update Cart Quantity
   const updateQuantity = async (itemId, size, quantity) => {
     const cartData = structuredClone(cartItems);
     if (cartData[itemId]) {
@@ -115,7 +122,6 @@ const ShopContextProvider = (props) => {
     return totalAmount;
   };
 
-  // ✅ Fetch Cart from Backend
   const fetchCartFromBackend = async () => {
     try {
       const res = await axios.post(
@@ -133,7 +139,6 @@ const ShopContextProvider = (props) => {
     }
   };
 
-  // Fetch Products
   const getProductsData = async () => {
     try {
       const res = await axios.get(`${backendUrl}/api/product/list`);
@@ -148,33 +153,41 @@ const ShopContextProvider = (props) => {
     }
   };
 
-  const getUserCart = async( token ) => {
+  const getUserCart = async (token) => {
     try {
-      
-      const response = await axios.post(backendUrl + '/api/cart/get',{},{headers:{token}})
+      const response = await axios.post(
+        backendUrl + '/api/cart/get',
+        {},
+        { headers: { token } }
+      );
       if (response.data.success) {
-        setCartItems(response.data.cartData)
+        setCartItems(response.data.cartData);
       }
-
     } catch (error) {
       console.log(error);
       toast.error(error.message);
     }
-  }
+  };
 
-  // Initial load of products
+  // Initial fetch
   useEffect(() => {
     getProductsData();
   }, []);
 
+  // On app load — load token & decode user
   useEffect(() => {
-    if (!token && localStorage.getItem('token')) {
-      setToken(localStorage.getItem('token'))
-      getUserCart(localStorage.getItem('token'))
+    const localToken = localStorage.getItem("token");
+    if (localToken) {
+      setToken(localToken);
+      const decodedUser = decodeToken(localToken);
+      if (decodedUser) {
+        setUser(decodedUser);
+      }
+      getUserCart(localToken);
     }
-  })
+  }, []);
 
-  // Fetch cart when token is ready
+  // Whenever token changes, fetch cart again
   useEffect(() => {
     if (token) {
       fetchCartFromBackend();
@@ -201,6 +214,7 @@ const ShopContextProvider = (props) => {
 
     setToken,
     token,
+    user,
     navigate,
 
     coupon,

@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { ShopContext } from '../context/ShopContext';
 import { useNavigate } from 'react-router-dom';
 import Title from '../components/Title';
@@ -15,7 +15,7 @@ const PlaceOrder = () => {
   const [method, setMethod] = useState('googlepay');
   const [couponInput, setCouponInput] = useState('');
   const [invalidCoupon, setInvalidCoupon] = useState(false);
-  const [localDiscount, setLocalDiscount] = useState(0); // Local discount tracking
+  const [localDiscount, setLocalDiscount] = useState(0);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -36,19 +36,26 @@ const PlaceOrder = () => {
     delivery_fee,
     products,
     applyCoupon,
-    coupon
+    coupon,
   } = useContext(ShopContext);
+
+  // 🔒 Redirect if not logged in
+  useEffect(() => {
+    if (!token) {
+      navigate('/login');
+    }
+  }, [token]);
 
   const onChangeHandler = (event) => {
     const { name, value } = event.target;
-    setFormData(data => ({ ...data, [name]: value }));
+    setFormData((data) => ({ ...data, [name]: value }));
   };
 
   const handleApplyCoupon = () => {
     const result = applyCoupon(couponInput);
     if (result.success) {
       setInvalidCoupon(false);
-      setLocalDiscount(result.discount || 10); // Example: 10% if not returned
+      setLocalDiscount(result.discount || 10);
     } else {
       setInvalidCoupon(true);
       setLocalDiscount(0);
@@ -58,8 +65,8 @@ const PlaceOrder = () => {
   const onSubmitHandler = async (event) => {
     event.preventDefault();
 
-    const hasItems = Object.values(cartItems).some(
-      sizes => Object.values(sizes).some(quantity => quantity > 0)
+    const hasItems = Object.values(cartItems).some((sizes) =>
+      Object.values(sizes).some((quantity) => quantity > 0)
     );
 
     if (!hasItems) {
@@ -86,14 +93,13 @@ const PlaceOrder = () => {
         for (const size in cartItems[productId]) {
           const quantity = cartItems[productId][size];
           if (quantity > 0) {
-            const product = products.find(p => p._id === productId);
+            const product = products.find((p) => p._id === productId);
             if (product) {
-              const item = {
+              orderItems.push({
                 ...structuredClone(product),
                 size,
                 quantity,
-              };
-              orderItems.push(item);
+              });
             }
           }
         }
@@ -105,17 +111,17 @@ const PlaceOrder = () => {
         amount: parseFloat(finalAmount),
         paymentInfo: {
           method,
-          status: method === 'googlepay' ? 'pending_confirmation' : 'unpaid'
-        }
+          status: method === 'googlepay' ? 'pending_confirmation' : 'unpaid',
+        },
       };
 
       const response = await fetch(`${backendUrl}/api/order`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify(orderData)
+        body: JSON.stringify(orderData),
       });
 
       if (response.ok) {
@@ -131,21 +137,17 @@ const PlaceOrder = () => {
 
   return (
     <form onSubmit={onSubmitHandler} className='flex flex-col sm:flex-row justify-between gap-4 pt-5 sm:pt-14 min-h-[80vh] border-t'>
-
-      {/* Left Side - Delivery Info */}
+      {/* Delivery Information */}
       <div className='flex flex-col gap-4 w-full sm:max-w-[480px]'>
         <div className='text-xl sm:text-2xl my-3'>
           <Title text1={'DELIVERY'} text2={'INFORMATION'} />
         </div>
-
         <div className='flex gap-3'>
           <input required onChange={onChangeHandler} name='firstName' value={formData.firstName} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' type="text" placeholder='First name' />
           <input required onChange={onChangeHandler} name='lastName' value={formData.lastName} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' type="text" placeholder='Last name' />
         </div>
-
         <input required onChange={onChangeHandler} name='email' value={formData.email} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' type="email" placeholder='Email address' />
         <input required onChange={onChangeHandler} name='street' value={formData.street} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' type="text" placeholder='Street' />
-
         <div className='flex gap-3'>
           <select required onChange={onChangeHandler} name='district' value={formData.district} className='border border-gray-300 rounded py-1.3 px-2.5 w-full text-gray-500'>
             <option value="">Select District</option>
@@ -155,14 +157,12 @@ const PlaceOrder = () => {
           </select>
           <input readOnly value="Kerala" className='border border-gray-300 rounded py-1.5 px-3.5 w-full bg-gray-100 cursor-not-allowed text-gray-500' />
         </div>
-
         <input required onChange={onChangeHandler} name='pincode' value={formData.pincode} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' type="number" placeholder='Pincode' />
         <input required onChange={onChangeHandler} name='phone' value={formData.phone} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' type="number" placeholder='Phone' />
       </div>
 
-      {/* Right Side - Summary & Payment */}
+      {/* Order Summary & Payment */}
       <div className='mt-8 w-full sm:max-w-[400px]'>
-
         <div className='mt-8 min-w-80'>
           <CartTotal />
         </div>
@@ -171,23 +171,11 @@ const PlaceOrder = () => {
         <div className='mt-6'>
           {localDiscount === 0 ? (
             <div className='flex flex-col gap-2'>
-              <input
-                type='text'
-                value={couponInput}
-                onChange={(e) => setCouponInput(e.target.value)}
-                placeholder='Enter coupon code'
-                className='border p-2 rounded outline-none text-sm'
-              />
-              <button
-                type='button'
-                onClick={handleApplyCoupon}
-                className='bg-black text-white px-4 py-2 rounded hover:bg-gray-800 text-sm'
-              >
+              <input type='text' value={couponInput} onChange={(e) => setCouponInput(e.target.value)} placeholder='Enter coupon code' className='border p-2 rounded outline-none text-sm' />
+              <button type='button' onClick={handleApplyCoupon} className='bg-black text-white px-4 py-2 rounded hover:bg-gray-800 text-sm'>
                 Apply Coupon
               </button>
-              {invalidCoupon && (
-                <p className='text-red-600 text-xs'>Invalid coupon code</p>
-              )}
+              {invalidCoupon && <p className='text-red-600 text-xs'>Invalid coupon code</p>}
             </div>
           ) : (
             <p className='text-green-600 text-sm'>Coupon "{coupon}" applied successfully!</p>
@@ -198,20 +186,13 @@ const PlaceOrder = () => {
         <div className='mt-12'>
           <Title text1={'PAYMENT'} text2={'METHOD'} />
           <div className='flex gap-3 flex-col lg:flex-row'>
-            <div
-              onClick={() => setMethod('googlepay')}
-              className='flex items-center gap-3 border p-2 px-3 cursor-pointer'
-            >
+            <div onClick={() => setMethod('googlepay')} className='flex items-center gap-3 border p-2 px-3 cursor-pointer'>
               <p className={`min-w-3.5 h-3.5 border rounded-full ${method === 'googlepay' ? 'bg-green-400' : ''}`}></p>
               <img className='h-5 mx-4' src={assets.googlepay_logo} alt="googlepay" />
             </div>
           </div>
-
           <div className='w-full text-center mt-8'>
-            <button
-              type='submit'
-              className='bg-black text-white px-16 py-3 text-sm'
-            >
+            <button type='submit' className='bg-black text-white px-16 py-3 text-sm'>
               PLACE ORDER
             </button>
           </div>

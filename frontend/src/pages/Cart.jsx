@@ -4,9 +4,10 @@ import Title from '../components/Title';
 import { assets } from '../assets/assets/assets';
 import CartTotal from '../components/CartTotal.jsx';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 const Cart = () => {
-  const { products, currency, cartItems, updateQuantity } = useContext(ShopContext);
+  const { products, currency, cartItems, updateQuantity, user } = useContext(ShopContext);
   const navigate = useNavigate();
 
   const cartData = useMemo(() => {
@@ -17,6 +18,15 @@ const Cart = () => {
         .map(([size, quantity]) => ({ _id: itemId, size, quantity }))
     );
   }, [cartItems, products]);
+
+  const handleCheckout = () => {
+    if (!user) {
+      toast.info("Please log in to proceed to checkout.");
+      navigate('/login');
+    } else {
+      navigate('/place-order');
+    }
+  };
 
   return (
     <div className='border-t pt-14'>
@@ -81,7 +91,7 @@ const Cart = () => {
           <div className='w-full text-end'>
             <button
               disabled={cartData.length === 0}
-              onClick={() => navigate('/place-order')}
+              onClick={handleCheckout}
               className={`bg-black text-white text-sm my-8 px-8 py-3 active:bg-gray-700 transition-opacity ${
                 cartData.length === 0 ? 'opacity-50 cursor-not-allowed' : ''
               }`}
