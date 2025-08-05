@@ -60,7 +60,11 @@ const ShopContextProvider = (props) => {
 
     if (token) {
       try {
-        await axios.post(`${backendUrl}/api/cart/add`, { itemId, size }, { headers: { token } });
+        await axios.post(
+          `${backendUrl}/api/cart/add`,
+          { itemId, size },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
       } catch (err) {
         console.log(err);
         toast.error("Failed to sync cart");
@@ -76,7 +80,11 @@ const ShopContextProvider = (props) => {
 
       if (token) {
         try {
-          await axios.post(`${backendUrl}/api/cart/update`, { itemId, size, quantity }, { headers: { token } });
+          await axios.post(
+            `${backendUrl}/api/cart/update`,
+            { itemId, size, quantity },
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
         } catch (err) {
           console.log(err);
           toast.error("Update failed");
@@ -123,7 +131,11 @@ const ShopContextProvider = (props) => {
 
   const fetchUserCart = async () => {
     try {
-      const res = await axios.post(`${backendUrl}/api/cart/get`, {}, { headers: { token } });
+      const res = await axios.post(
+        `${backendUrl}/api/cart/get`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       if (res.data.success) {
         setCartItems(res.data.cartData);
       }
