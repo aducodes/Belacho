@@ -15,8 +15,10 @@ const placeOrderGooglePay = async (req, res) => {
       address,
       amount,
       paymentInfo,
+      paymentMethod: paymentInfo.method || 'googlepay',
+      payment: false,
       status: "processing",
-      createdAt: new Date()
+      date: Date.now()
     });
 
     await newOrder.save();
@@ -25,7 +27,7 @@ const placeOrderGooglePay = async (req, res) => {
     res.json({ success: true, message: "Order placed successfully" });
   } catch (error) {
     console.error("Place order error:", error);
-    res.json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -36,7 +38,7 @@ const allOrders = async (req, res) => {
     res.json({ success: true, orders });
   } catch (error) {
     console.error("Fetch all orders error:", error);
-    res.json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -48,7 +50,7 @@ const userOrders = async (req, res) => {
     res.json({ success: true, orders });
   } catch (error) {
     console.error("Fetch user orders error:", error);
-    res.json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -60,7 +62,7 @@ const updateStatus = async (req, res) => {
     res.json({ success: true, message: "Status updated" });
   } catch (error) {
     console.error("Update status error:", error);
-    res.json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
