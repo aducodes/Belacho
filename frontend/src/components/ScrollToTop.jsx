@@ -1,19 +1,24 @@
-import { useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
 
   useEffect(() => {
-    // Ensure scroll happens after DOM updates
+    // Reset scroll after full paint using requestAnimationFrame
     const scrollToTop = () => {
-      window.scrollTo({ top: 0, behavior: "auto" });
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          window.scrollTo({
+            top: 0,
+            left: 0,
+            behavior: 'instant', // try "auto" or "instant"
+          });
+        }, 0);
+      });
     };
 
-    // Delay scroll slightly to allow page render
-    const timeout = setTimeout(scrollToTop, 50);
-
-    return () => clearTimeout(timeout);
+    scrollToTop();
   }, [pathname]);
 
   return null;
