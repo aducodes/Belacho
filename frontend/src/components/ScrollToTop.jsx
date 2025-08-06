@@ -5,20 +5,11 @@ const ScrollToTop = () => {
   const { pathname } = useLocation();
 
   useEffect(() => {
-    // Reset scroll after full paint using requestAnimationFrame
-    const scrollToTop = () => {
-      requestAnimationFrame(() => {
-        setTimeout(() => {
-          window.scrollTo({
-            top: 0,
-            left: 0,
-            behavior: 'instant', // try "auto" or "instant"
-          });
-        }, 0);
-      });
-    };
-
-    scrollToTop();
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: 'auto', // ← "auto" is more reliable than "instant"
+    });
   }, [pathname]);
 
   return null;
