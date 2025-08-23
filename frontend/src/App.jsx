@@ -15,7 +15,6 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import SearchBar from './components/SearchBar';
 import ScrollToTop from './components/ScrollToTop';
-import ErrorBoundary from './components/ErrorBoundary';
 
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css'; // ✅ Import styles once
@@ -28,9 +27,6 @@ const App = () => {
         <ToastContainer />
         <Navbar />
         <SearchBar />
-
-        {/* ✅ ErrorBoundary wraps all routes */}
-        <ErrorBoundary>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/collection" element={<Collection />} />
@@ -46,7 +42,6 @@ const App = () => {
             {/* ✅ Catch-all 404 page */}
             <Route path="*" element={<h1 className="text-center mt-10">404 - Page Not Found</h1>} />
           </Routes>
-        </ErrorBoundary>
 
         <Footer />
       </div>
