@@ -15,33 +15,27 @@ import SearchBar from './components/SearchBar';
 import OrderSuccess from './pages/OrderSuccess';
 import ScrollToTop from './components/ScrollToTop';
 import { ToastContainer } from 'react-toastify';
-import ErrorBoundary from './components/ErrorBoundary'; // ✅ Import
 
 const App = () => {
   return (
     <Router>
-      <ScrollToTop />
+      <ScrollToTop /> {/* ✅ This ensures scroll resets on every route change */}
       <div className='px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]'>
         <ToastContainer />
         <Navbar />
         <SearchBar />
-        
-        {/* ✅ Wrap your routes inside ErrorBoundary */}
-        <ErrorBoundary>
-          <Routes>
-            <Route path='/' element={<Home />} />
-            <Route path='/collection' element={<Collection />} />
-            <Route path='/about' element={<About />} />
-            <Route path='/contact' element={<Contact />} />
-            <Route path='/products/:productsId' element={<Products />} />
-            <Route path='/cart' element={<Cart />} />
-            <Route path='/login' element={<Login />} />
-            <Route path='/place-order' element={<PlaceOrder />} />
-            <Route path='/orders' element={<Orders />} />
-            <Route path='/order-success' element={<OrderSuccess />} />
-          </Routes>
-        </ErrorBoundary>
-
+        <Routes>
+          <Route path='/' element={<Home />} />
+          <Route path='/collection' element={<Collection />} />
+          <Route path='/about' element={<About />} />
+          <Route path='/contact' element={<Contact />} />
+          <Route path='/products/:productsId' element={<Products />} />
+          <Route path='/cart' element={<Cart />} />
+          <Route path='/login' element={<Login />} />
+          <Route path='/place-order' element={<PlaceOrder />} />
+          <Route path='/orders' element={<Orders />} />
+          <Route path='/order-success' element={<OrderSuccess />} />
+        </Routes>
         <Footer />
       </div>
     </Router>
