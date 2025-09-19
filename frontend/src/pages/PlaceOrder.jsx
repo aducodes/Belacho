@@ -206,7 +206,7 @@ const PlaceOrder = () => {
           ) : (
             <div className='mt-8 text-center'>
               <QRCode value={upiString} size={200} />
-              <p className='mt-2 text-sm text-gray-600'>Scan to pay ₹{finalAmount} to <b>Noushis Cakes</b></p>
+              <p className='mt-2 text-sm text-gray-600'>Scan to pay ₹{finalAmount} to <b>Belacho</b></p>
               <button onClick={confirmPaymentAndSubmit} className='mt-5 bg-green-600 text-white px-4 py-2 rounded'>
                 I HAVE PAID
               </button>
